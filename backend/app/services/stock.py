@@ -3,28 +3,36 @@ import logging
 from datetime import datetime, timezone
 
 import yfinance as yf
-from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_result
+from tenacity import (
+    retry,
+    retry_if_exception_type,
+    retry_if_result,
+    stop_after_attempt,
+    wait_exponential,
+)
 
 from app.models.schemas import HistoryPoint, StockHistory, StockQuote
 
 logger = logging.getLogger(__name__)
 
+# yfinance raises this on Yahoo rate limits (common on cloud IPs)
+_YF_RATE_LIMIT = getattr(yf.exceptions, "YFRateLimitError", Exception)
 
-def _is_empty_or_none(result: object) -> bool:
-    """Retry predicate: yfinance silently returns empty DataFrames on rate limits."""
-    if result is None:
-        return True
-    if hasattr(result, "empty") and result.empty:
-        return True
-    return False
-
-
-@retry(
-    stop=stop_after_attempt(3),
-    wait=wait_exponential(multiplier=1, min=2, max=10),
-    retry=retry_if_result(_is_empty_or_none),
+_RETRY_POLICY = dict(
+    stop=stop_after_attempt(5),
+    wait=wait_exponential(multiplier=2, min=4, max=30),
+    retry=(
+        retry_if_exception_type(_YF_RATE_LIMIT)
+        | retry_if_result(lambda r: r is None)
+    ),
     reraise=True,
+    before_sleep=lambda rs: logger.warning(
+        "yfinance retry #%d after %s", rs.attempt_number, rs.outcome
+    ),
 )
+
+
+@retry(**_RETRY_POLICY)
 def _fetch_ticker_info(ticker: str) -> dict:
     t = yf.Ticker(ticker)
     info = t.info
@@ -33,12 +41,7 @@ def _fetch_ticker_info(ticker: str) -> dict:
     return info
 
 
-@retry(
-    stop=stop_after_attempt(3),
-    wait=wait_exponential(multiplier=1, min=2, max=10),
-    retry=retry_if_result(lambda r: r is None),
-    reraise=True,
-)
+@retry(**_RETRY_POLICY)
 def _fetch_ticker_history(ticker: str, interval: str, period: str):
     t = yf.Ticker(ticker)
     df = t.history(interval=interval, period=period)
