@@ -81,6 +81,17 @@ app.include_router(metrics_router)
 app.include_router(ws_router)
 
 
+@app.get("/")
+async def root():
+    """Avoid a bare 404 when someone opens the API base URL (e.g. after `docker compose up`)."""
+    return {
+        "service": "amzn-tracker-api",
+        "ui": "http://localhost:3000",
+        "docs": "/docs",
+        "health": "/health",
+    }
+
+
 @app.get("/health")
 async def health():
     return {"status": "ok"}

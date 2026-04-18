@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { useStockStore } from "@/lib/store";
 import { useWebSocket } from "@/hooks/useWebSocket";
+import { quoteFromHistoryPoints } from "@/lib/quoteFromHistory";
 import type { StockQuote, StockHistory } from "@/lib/types";
 
 import Header from "@/components/Header";
@@ -34,6 +35,10 @@ export default function Dashboard() {
         if (historyRes.ok) {
           const history: StockHistory = await historyRes.json();
           setHistory(history.points);
+          if (!metricsRes.ok) {
+            const fallback = quoteFromHistoryPoints(history.ticker, history.points);
+            if (fallback) setQuote(fallback);
+          }
         }
       } catch {
         // backend not yet available — WebSocket will hydrate once connected
