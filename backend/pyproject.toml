@@ -1,25 +1,44 @@
 [project]
-name = "backend"
+name = "amzn-tracker"
 version = "0.1.0"
-description = "Add your description here"
-readme = "README.md"
-requires-python = ">=3.10"
+description = "Production-grade AMZN stock monitor — FastAPI + WebSocket backend"
+requires-python = ">=3.12"
+
 dependencies = [
-    "apscheduler>=3.11.2",
-    "fastapi>=0.136.0",
-    "httpx>=0.28.1",
-    "pydantic>=2.13.2",
-    "pydantic-settings>=2.13.1",
-    "python-dotenv>=1.2.2",
-    "tenacity>=9.1.4",
-    "uvicorn[standard]>=0.44.0",
-    "websockets>=16.0",
-    "yfinance>=1.3.0",
+  "fastapi>=0.111.0",
+  "uvicorn[standard]>=0.29.0",
+  "websockets>=12.0",
+  "yfinance>=0.2.40",
+  "pydantic>=2.7.0",
+  "pydantic-settings>=2.2.0",     # for BaseSettings / .env loading
+  "python-dotenv>=1.0.1",
+  "httpx>=0.27.0",                # retryable HTTP client
+  "apscheduler>=3.10.4",          # background polling worker
+  "tenacity>=8.3.0",              # retry decorator for yfinance calls
 ]
 
 [dependency-groups]
 dev = [
-    "pytest>=9.0.3",
-    "pytest-asyncio>=1.3.0",
-    "ruff>=0.15.11",
+  "pytest>=8.2.0",
+  "pytest-asyncio>=0.23.0",
+  "ruff>=0.4.0",
+  "httpx>=0.27.0",                # needed by TestClient
 ]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["app"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]

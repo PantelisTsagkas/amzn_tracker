@@ -1,8 +1,14 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
+  --background: #fafafa;
   --foreground: #171717;
+  --card: #ffffff;
+  --card-border: #e4e4e7;
+  --chart-green: #10b981;
+  --chart-red: #ef4444;
+  --chart-green-fill: rgba(16, 185, 129, 0.15);
+  --chart-red-fill: rgba(239, 68, 68, 0.15);
 }
 
 @theme inline {
@@ -14,13 +20,23 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
+    --background: #09090b;
     --foreground: #ededed;
+    --card: #18181b;
+    --card-border: #27272a;
+    --chart-green-fill: rgba(16, 185, 129, 0.2);
+    --chart-red-fill: rgba(239, 68, 68, 0.2);
   }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
+}
+
+/* Recharts tooltip override for dark mode */
+.recharts-default-tooltip {
+  background: var(--card) !important;
+  border-color: var(--card-border) !important;
 }
